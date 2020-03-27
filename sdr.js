@@ -141,23 +141,34 @@ export default class SDRContainer extends React.Component {
     if (typeof prop !== 'string') {
       return prop;
     }
+
+    // "function::test.onPress(${text::item.info.buttonName})",
     const segments = prop.replace(FUNCTION_PREFIX, '').split('(');
     if (segments.length === 0) {
       return prop;
     }
     const parts = segments[0].split('.');
+    // parts= ['test', 'onPress']
     const argsSegment = segments[1];
+    // argsSegment = '${text::item.info.buttonName})'
     let func = this.props;
+    // 找到onPress对应的值: func
     for (let i = 0; i < parts.length && func; i++) {
       func = func[parts[i]];
     }
+    // func不是函数类型, 返回默认空函数实现
     if (typeof func !== 'function') {
       return () => {};
     }
+    // 没有参数,直接返回函数
     if (!argsSegment) {
       return func;
     }
+
+    // 解析function中的参数
     const args = argsSegment.replace(')', '').split(/,\s*/g);
+    // args = ["${text::item.info.buttonName}"]
+    // 遍历args, 可能存在多个参数
     for (let i = 0; i < args.length; i++) {
       if (args[i].includes(PROP_PREFIX)) {
         args[i] = this.replaceProp(args[i]);
@@ -165,6 +176,7 @@ export default class SDRContainer extends React.Component {
         args[i] = this.replaceText(args[i]);
       }
     }
+    // 返回真正的函数实现
     return () => func(...args);
   }
 
